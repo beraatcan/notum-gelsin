@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Notum Gelsin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+:root {
+  --bg:      #09090f;
+  --card:    #131420;
+  --card2:   #1a1b2e;
+  --border:  rgba(255,255,255,0.07);
+  --pr:      #7c72ff;
+  --pr2:     #5b52e0;
+  --pglow:   rgba(124,114,255,0.35);
+  --green:   #05d394;
+  --gold:    #ffc940;
+  --red:     #ff5c7a;
+  --txt:     #eeeeff;
+  --txt2:    #7b7d96;
+  --txt3:    #3e3f58;
+}
+
+/* ── CRITICAL: lock the viewport ─────────────────────── */
+html {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  color: var(--txt);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  position: fixed;   /* prevent any pull-to-refresh / overscroll */
+  inset: 0;
+}
+
+/* ── APP SHELL ─────────────────────────────────────────── */
+#app {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+#app.show { display: flex; }
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(9,9,15,0.96);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 50;
+}
+.hdr-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.hdr-logo img {
+  width: 34px; height: 34px; border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(80,160,255,0.55);
+  object-fit: cover;
+}
+.hdr-logo-txt {
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px;
+  background: linear-gradient(130deg, #55d0ff, #b29bff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hdr-right { display: flex; gap: 8px; align-items: center; }
+.hdr-btn {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: var(--card2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer;
+  transition: transform .15s;
+}
+.hdr-btn:active { transform: scale(.88); }
+.cart-wrap { position: relative; }
+.cart-badge {
+  position: absolute; top: -4px; right: -4px;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  background: var(--pr); color: #fff;
+  font-size: 9px; font-weight: 800;
+  display: none; align-items: center; justify-content: center;
+  padding: 0 4px;
+}
+.cart-badge.on { display: flex; }
+
+/* ── SCREEN STACK ─────────────────────────────────────── */
+.screens {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.screen.active {
+  display: flex;
+  animation: screenIn .28s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SCROLLABLE CONTENT ───────────────────────────────── */
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ── BOTTOM NAV ───────────────────────────────────────── */
+.bnav {
+  display: flex;
+  align-items: center;
+  background: rgba(9,9,15,0.97);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  padding: 0 4px 12px;
+}
+.bnav-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 10px 4px 4px;
+  cursor: pointer; position: relative;
+  transition: opacity .2s;
+}
+.bnav-item:active { opacity: .6; }
+.bnav-icon {
+  font-size: 22px; line-height: 1;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1);
+}
+.bnav-lbl {
+  font-size: 10px; font-weight: 700;
+  color: var(--txt3);
+  transition: color .2s;
+  letter-spacing: .3px;
+}
+.bnav-item.on .bnav-lbl { color: var(--pr); }
+.bnav-item.on .bnav-icon { transform: scale(1.18); }
+.bnav-dot {
+  position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 18px; height: 3px; border-radius: 2px;
+  background: var(--pr); opacity: 0; transition: opacity .2s;
+}
+.bnav-item.on .bnav-dot { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  AUTH SCREEN                                          */
+/* ═══════════════════════════════════════════════════════ */
+#auth {
+  display: flex; flex-direction: column;
+  height: 100%; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: radial-gradient(ellipse 120% 50% at 50% -10%, rgba(124,114,255,.4) 0%, transparent 65%), var(--bg);
+}
+.auth-hero {
+  padding: 44px 24px 28px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.auth-logo {
+  width: 84px; height: 84px; border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 3px rgba(80,160,255,.5), 0 0 40px rgba(80,160,255,.3);
+  margin-bottom: 16px;
+}
+.auth-brand {
+  font-family: 'Fredoka One', cursive; font-size: 28px;
+  background: linear-gradient(130deg,#55d0ff,#b29bff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.auth-brand-sub {
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--txt3); margin-top: 2px;
+}
+.auth-hl {
+  font-size: 26px; font-weight: 900; text-align: center;
+  line-height: 1.25; margin: 28px 0 10px;
+}
+.auth-hl em {
+  font-style: normal;
+  background: linear-gradient(130deg, var(--pr), var(--green));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.auth-p { font-size: 14px; color: var(--txt2); text-align: center; line-height: 1.65; margin-bottom: 28px; }
+
+.auth-card {
+  margin: 0 16px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 22px; padding: 20px;
+}
+.auth-tabs {
+  display: flex; gap: 4px;
+  background: rgba(0,0,0,.35); border-radius: 12px; padding: 4px;
+  margin-bottom: 20px;
+}
+.auth-tab {
+  flex: 1; padding: 11px; border: none;
+  background: transparent; color: var(--txt2);
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer; border-radius: 10px; transition: all .2s;
+}
+.auth-tab.on {
+  background: linear-gradient(135deg, var(--pr), var(--pr2));
+  color: #fff;
+}
+.form { display: none; flex-direction: column; gap: 12px; }
+.form.on { display: flex; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; font-weight: 700; color: var(--txt2); }
+.field input, .field select, .field textarea {
+  background: var(--card2); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 13px 15px;
+  color: var(--txt); font-family: inherit; font-size: 15px;
+  outline: none; width: 100%; -webkit-appearance: none;
+  transition: border .2s;
+}
+.field input:focus { border-color: var(--pr); }
+.field input::placeholder { color: var(--txt3); }
+.div-or {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--txt3); font-size: 12px; font-weight: 600;
+}
+.div-or::before, .div-or::after { content:''; flex:1; height:1px; background: var(--border); }
+
+.auth-stats {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; margin: 24px 16px 40px;
+}
+.auth-stat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px 10px; text-align: center;
+}
+.auth-stat-n {
+  font-size: 20px; font-weight: 900;
+  background: linear-gradient(135deg, var(--pr), var(--green));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.auth-stat-l { font-size: 10px; color: var(--txt3); font-weight: 600; margin-top: 3px; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  BUTTONS                                              */
+/* ═══════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 20px; border-radius: 14px;
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  border: none; cursor: pointer; transition: all .18s;
+  -webkit-appearance: none;
+}
+.btn:active { transform: scale(.94); }
+.btn-pr  { background: linear-gradient(135deg,var(--pr),var(--pr2)); color: #fff; box-shadow: 0 4px 18px var(--pglow); }
+.btn-gst { background: var(--card2); border: 1px solid var(--border); color: var(--txt); }
+.btn-grn { background: linear-gradient(135deg,var(--green),#04b87e); color: #fff; }
+.btn-red { background: rgba(255,92,122,.15); color: var(--red); border: 1px solid rgba(255,92,122,.25); }
+.btn-w   { width: 100%; }
+.btn-sm  { padding: 9px 16px; font-size: 13px; border-radius: 11px; }
+.btn-xs  { padding: 7px 13px; font-size: 12px; border-radius: 9px; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  SHARED COMPONENTS                                    */
+/* ═══════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px; border-radius: 20px;
+  font-size: 10px; font-weight: 700;
+}
+.b-pr  { background: rgba(124,114,255,.2); color: var(--pr); }
+.b-grn { background: rgba(5,211,148,.15);  color: var(--green); }
+.b-gld { background: rgba(255,201,64,.15); color: var(--gold); }
+.b-red { background: rgba(255,92,122,.15); color: var(--red); }
+.b-neu { background: rgba(255,255,255,.07); color: var(--txt2); }
+
+/* section header */
+.s-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; margin: 20px 0 12px;
+}
+.s-hd h3 { font-size: 16px; font-weight: 800; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  HOME SCREEN                                          */
+/* ═══════════════════════════════════════════════════════ */
+.home-banner {
+  margin: 14px 14px 0;
+  background: linear-gradient(135deg, rgba(124,114,255,.22), rgba(5,211,148,.1));
+  border: 1px solid rgba(124,114,255,.2);
+  border-radius: 22px; padding: 20px;
+  position: relative; overflow: hidden;
+}
+.home-banner::after {
+  content: '📚';
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 56px; opacity: .1; pointer-events: none;
+}
+.home-banner-hi  { font-size: 13px; color: var(--txt2); font-weight: 500; }
+.home-banner-name { font-size: 22px; font-weight: 900; margin: 2px 0 4px; }
+.home-banner-sub  { font-size: 12px; color: var(--txt2); margin-bottom: 14px; line-height: 1.5; }
+
+/* quick actions */
+.qa-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 10px; padding: 0 14px; margin: 14px 0 0;
+}
+.qa {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  cursor: pointer;
+}
+.qa:active .qa-ico { transform: scale(.88); }
+.qa-ico {
+  width: 54px; height: 54px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; transition: transform .18s;
+}
+.qa-txt { font-size: 10px; font-weight: 700; color: var(--txt2); text-align: center; line-height: 1.3; }
+.qi1 { background: linear-gradient(135deg,rgba(124,114,255,.28),rgba(90,80,220,.18)); }
+.qi2 { background: linear-gradient(135deg,rgba(5,211,148,.2),rgba(4,180,120,.14)); }
+.qi3 { background: linear-gradient(135deg,rgba(255,201,64,.2),rgba(220,160,0,.14)); }
+.qi4 { background: linear-gradient(135deg,rgba(255,92,122,.2),rgba(200,40,70,.14)); }
+
+/* mini stats */
+.mini-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 0 14px; margin: 14px 0 0;
+}
+.mini-stat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px;
+  display: flex; align-items: center; gap: 11px;
+}
+.mini-stat-ico {
+  width: 40px; height: 40px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  flex-shrink: 0;
+}
+.ms1 { background: rgba(124,114,255,.2); }
+.ms2 { background: rgba(255,201,64,.15); }
+.ms3 { background: rgba(5,211,148,.15); }
+.ms4 { background: rgba(255,92,122,.15); }
+.mini-stat-val { font-size: 17px; font-weight: 900; }
+.mini-stat-lbl { font-size: 10px; color: var(--txt2); font-weight: 600; margin-top: 1px; }
+
+/* horizontal card scroll */
+.h-scroll {
+  display: flex; gap: 11px;
+  padding: 0 14px 4px;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.h-scroll::-webkit-scrollbar { display: none; }
+
+.h-card {
+  flex-shrink: 0; width: 158px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; overflow: hidden; cursor: pointer;
+  transition: transform .18s;
+}
+.h-card:active { transform: scale(.95); }
+.h-card-thumb {
+  height: 90px; display: flex; align-items: center;
+  justify-content: center; font-size: 38px;
+}
+.h-card-body { padding: 11px; }
+.h-card-title { font-size: 12px; font-weight: 700; line-height: 1.35; margin-bottom: 7px; }
+.h-card-price { font-size: 15px; font-weight: 900; color: var(--pr); }
+.h-card-price.free { color: var(--green); font-size: 12px; }
+.h-card-rating { font-size: 10px; color: var(--gold); font-weight: 600; margin-top: 2px; }
+
+/* vertical note row */
+.v-row {
+  display: flex; align-items: center; gap: 13px;
+  padding: 13px 14px;
+  background: var(--card); border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .15s;
+}
+.v-row:first-child { border-top: 1px solid var(--border); }
+.v-row:active { background: var(--card2); }
+.v-row-thumb {
+  width: 54px; height: 54px; border-radius: 15px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0;
+}
+.v-row-info { flex: 1; min-width: 0; }
+.v-row-title { font-size: 13px; font-weight: 700; line-height: 1.35; margin-bottom: 4px; }
+.v-row-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 3px; }
+.v-row-sub { font-size: 11px; color: var(--txt2); }
+.v-row-right { text-align: right; flex-shrink: 0; }
+.v-row-price { font-size: 16px; font-weight: 900; color: var(--pr); }
+.v-row-price.free { color: var(--green); font-size: 12px; }
+.v-row-star { font-size: 10px; color: var(--gold); font-weight: 600; margin: 2px 0 6px; }
+.add-btn {
+  padding: 5px 11px; border-radius: 8px; border: none;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  font-family: inherit; transition: all .18s;
+}
+.add-btn:active { transform: scale(.88); }
+.add-btn.out { background: var(--pr); color: #fff; }
+.add-btn.in  { background: var(--card2); border: 1px solid var(--border); color: var(--txt2); }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  EXPLORE SCREEN                                       */
+/* ═══════════════════════════════════════════════════════ */
+.ex-search {
+  display: flex; align-items: center; gap: 10px;
+  margin: 12px 14px 0;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 12px 14px;
+}
+.ex-search:focus-within { border-color: var(--pr); }
+.ex-search-icon { font-size: 17px; color: var(--txt3); }
+.ex-search input {
+  background: none; border: none; padding: 0;
+  font-size: 15px; color: var(--txt); font-family: inherit;
+  outline: none; flex: 1;
+}
+.ex-search input::placeholder { color: var(--txt3); }
+
+.cat-row {
+  display: flex; gap: 7px; padding: 12px 14px;
+  overflow-x: auto; flex-shrink: 0;
+}
+.cat-row::-webkit-scrollbar { display: none; }
+.cat-pill {
+  flex-shrink: 0; padding: 8px 15px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--txt2); font-family: inherit; cursor: pointer;
+  transition: all .18s; white-space: nowrap;
+}
+.cat-pill.on { background: var(--pr); border-color: var(--pr); color: #fff; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  CART SCREEN                                          */
+/* ═══════════════════════════════════════════════════════ */
+.cart-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.cart-row:first-child { border-top: 1px solid var(--border); }
+.cart-thumb {
+  width: 50px; height: 50px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; flex-shrink: 0;
+}
+.cart-info { flex: 1; min-width: 0; }
+.cart-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.cart-sub   { font-size: 11px; color: var(--txt2); }
+.cart-price-s { font-size: 16px; font-weight: 900; color: var(--pr); text-align: right; }
+.cart-del { font-size: 18px; cursor: pointer; padding: 4px; opacity: .6; }
+.cart-del:active { opacity: 1; }
+
+.order-sum {
+  margin: 6px 14px 14px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 18px;
+}
+.order-sum h3 { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+.orow { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; color: var(--txt2); }
+.orow.tot { color: var(--txt); font-weight: 800; font-size: 15px; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 6px; }
+.wallet-chip {
+  background: rgba(5,211,148,.1); border: 1px solid rgba(5,211,148,.2);
+  border-radius: 11px; padding: 10px 13px; margin: 10px 0;
+  font-size: 12px; color: var(--green); font-weight: 600;
+}
+
+/* ── empty state ── */
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px 24px; text-align: center;
+  flex: 1;
+}
+.empty-ico { font-size: 56px; opacity: .3; margin-bottom: 16px; }
+.empty h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.empty p  { font-size: 13px; color: var(--txt2); margin-bottom: 22px; }
+
+/* ── checkout success ── */
+.success-wrap {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; padding: 40px 24px; text-align: center; flex: 1;
+}
+.success-wrap.on { display: flex; animation: popIn .4s cubic-bezier(.34,1.56,.64,1); }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.success-ico { font-size: 76px; margin-bottom: 20px; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  ORDERS SCREEN                                        */
+/* ═══════════════════════════════════════════════════════ */
+.seg {
+  display: flex; gap: 4px;
+  background: rgba(0,0,0,.3); border-radius: 13px; padding: 4px;
+  margin: 12px 14px;
+}
+.seg-btn {
+  flex: 1; padding: 10px; border: none; background: transparent;
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; border-radius: 10px; transition: all .2s; color: var(--txt2);
+}
+.seg-btn.on { background: var(--card2); color: var(--txt); }
+
+.order-row-m {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px; border-bottom: 1px solid var(--border);
+}
+.order-row-m:first-child { border-top: 1px solid var(--border); }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  UPLOAD SCREEN                                        */
+/* ═══════════════════════════════════════════════════════ */
+.drop-zone {
+  margin: 14px 14px 0;
+  border: 2px dashed var(--border); border-radius: 20px;
+  padding: 28px; text-align: center; cursor: pointer;
+  transition: all .22s;
+}
+.drop-zone.over { border-color: var(--pr); background: rgba(124,114,255,.06); }
+.drop-ico { font-size: 44px; margin-bottom: 10px; }
+.drop-zone h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.drop-zone p  { font-size: 12px; color: var(--txt2); }
+.drop-file    { font-size: 12px; color: var(--pr); font-weight: 600; margin-top: 10px; }
+.upload-form  { padding: 14px 14px 0; display: flex; flex-direction: column; gap: 12px; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  PROFILE SCREEN                                       */
+/* ═══════════════════════════════════════════════════════ */
+.profile-top {
+  margin: 14px;
+  background: linear-gradient(135deg,rgba(124,114,255,.22),rgba(255,92,122,.1));
+  border: 1px solid var(--border); border-radius: 22px;
+  padding: 22px; text-align: center;
+}
+.profile-av {
+  width: 72px; height: 72px; border-radius: 22px; margin: 0 auto 12px;
+  background: linear-gradient(135deg,var(--pr),var(--red));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900;
+}
+.profile-name  { font-size: 19px; font-weight: 900; }
+.profile-email { font-size: 11px; color: var(--txt2); margin: 3px 0 12px; }
+.profile-tags  { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+
+.wallet-m {
+  margin: 0 14px 14px;
+  background: linear-gradient(135deg,#17125e,#0c2640);
+  border: 1px solid rgba(124,114,255,.25); border-radius: 20px;
+  padding: 20px; position: relative; overflow: hidden;
+}
+.wallet-m::before {
+  content:''; position: absolute;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(124,114,255,.1); top: -50px; right: -30px;
+}
+.wallet-lbl    { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+.wallet-amount { font-size: 36px; font-weight: 900; margin: 8px 0; }
+.wallet-btns   { display: flex; gap: 9px; margin-top: 14px; }
+
+.menu-item {
+  display: flex; align-items: center; gap: 13px;
+  padding: 15px 14px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .15s;
+}
+.menu-item:first-child { border-top: 1px solid var(--border); }
+.menu-item:active { background: var(--card2); }
+.menu-ico {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.menu-info { flex: 1; }
+.menu-title { font-size: 14px; font-weight: 600; }
+.menu-sub   { font-size: 11px; color: var(--txt2); margin-top: 1px; }
+.menu-arr   { color: var(--txt3); font-size: 17px; }
+
+.tx-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+}
+.tx-row:first-child { border-top: 1px solid var(--border); }
+.tx-ico {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: rgba(255,255,255,.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.tx-amount { font-size: 14px; font-weight: 800; }
+.tx-p { color: var(--green); }
+.tx-n { color: var(--red); }
+.tx-lbl  { font-size: 12px; font-weight: 600; }
+.tx-date { font-size: 10px; color: var(--txt3); margin-top: 1px; }
+
+/* ═══════════════════════════════════════════════════════ */
+/*  BOTTOM SHEET (detail)                                */
+/* ═══════════════════════════════════════════════════════ */
+.sheet-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
+  z-index: 200; align-items: flex-end;
+}
+.sheet-bg.on { display: flex; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.sheet {
+  background: var(--card); border-radius: 26px 26px 0 0;
+  width: 100%; max-height: 88%;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  animation: sheetUp .3s cubic-bezier(.4,0,.2,1);
+  padding-bottom: 24px;
+}
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.sheet-handle {
+  width: 38px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,.15); margin: 10px auto 16px;
+}
+.sheet-inner { padding: 0 16px; }
+
+/* ── TOAST ─────────────────────────────────────────────── */
+#toasts {
+  position: fixed; top: 66px; left: 12px; right: 12px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 7px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 11px 15px;
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 600;
+  animation: fadeUp .3s ease;
+  box-shadow: 0 6px 24px rgba(0,0,0,.5);
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.toast.bye { opacity: 0; transform: translateY(-4px); transition: all .3s; }
+
+/* ── MOUSE DRAG CURSORS ── */
+.scroll, #auth, .sheet { cursor: grab; }
+.scroll:active, #auth:active, .sheet:active { cursor: grabbing; }
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- AUTH                                                  -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="auth">
+  <div class="auth-hero">
+    <img class="auth-logo" src="logo.jpg" alt="Logo">
+    <div class="auth-brand">Notum Gelsin</div>
+    <div class="auth-brand-sub">Üniversite Not Pazarı</div>
+  </div>
+
+  <div class="auth-hl" style="padding:0 20px">
+    Başarılı notlar,<br><em>parmaklarında</em>
+  </div>
+  <p class="auth-p" style="padding:0 20px">.edu.tr e-postanla kayıt ol, ders notlarını sat ya da satın al.</p>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab on" id="at-login" onclick="authSwitch('login')">Giriş Yap</button>
+      <button class="auth-tab"    id="at-reg"   onclick="authSwitch('reg')">Kayıt Ol</button>
+    </div>
+
+    <div class="form on" id="af-login">
+      <div class="field">
+        <label>Üniversite E-posta</label>
+        <input type="email" value="bera@hacettepe.edu.tr" placeholder="ad@uni.edu.tr">
+      </div>
+      <div class="field">
+        <label>Şifre</label>
+        <input type="password" value="demo1234" placeholder="••••••••">
+      </div>
+      <button class="btn btn-pr btn-w" onclick="doLogin()">Giriş Yap →</button>
+      <div class="div-or">veya</div>
+      <button class="btn btn-gst btn-w" onclick="doLogin()">🏛 Üniversite SSO ile Giriş</button>
+    </div>
+
+    <div class="form" id="af-reg">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label>Ad</label><input placeholder="Adınız"></div>
+        <div class="field"><label>Soyad</label><input placeholder="Soyadınız"></div>
+      </div>
+      <div class="field"><label>Üniversite E-posta</label><input type="email" placeholder="ad@uni.edu.tr"></div>
+      <div class="field"><label>Şifre</label><input type="password" placeholder="Min. 8 karakter"></div>
+      <button class="btn btn-pr btn-w" onclick="doLogin()">Hesap Oluştur →</button>
+    </div>
+  </div>
+
+  <div class="auth-stats">
+    <div class="auth-stat">
+      <div class="auth-stat-n">2.4K+</div>
+      <div class="auth-stat-l">Aktif Not</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n">850+</div>
+      <div class="auth-stat-l">Öğrenci</div>
+    </div>
+    <div class="auth-stat">
+      <div class="auth-stat-n">4.8⭐</div>
+      <div class="auth-stat-l">Ort. Puan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- APP SHELL                                             -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="app">
+  <!-- Header -->
+  <header class="hdr">
+    <div class="hdr-logo">
+      <img src="logo.jpg" alt="Logo">
+      <span class="hdr-logo-txt">Notum Gelsin</span>
+    </div>
+    <div class="hdr-right">
+      <button class="hdr-btn" onclick="toast('i','🔔 Bildirimler yakında!')">🔔</button>
+      <div class="cart-wrap">
+        <button class="hdr-btn" onclick="goScreen('cart')">🛒</button>
+        <div class="cart-badge" id="cart-badge">0</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Screen stack -->
+  <div class="screens">
+
+    <!-- HOME -->
+    <div class="screen active" id="sc-home">
+      <div class="scroll">
+        <div class="home-banner">
+          <div class="home-banner-hi">👋 Merhaba,</div>
+          <div class="home-banner-name">Bera Aydın!</div>
+          <div class="home-banner-sub">Bugün hangi ders için not arıyorsun?</div>
+          <button class="btn btn-pr btn-sm" onclick="goScreen('explore')">Keşfet →</button>
+        </div>
+
+        <div class="qa-grid">
+          <div class="qa" onclick="goScreen('explore')">
+            <div class="qa-ico qi1">🔍</div><span class="qa-txt">Keşfet</span>
+          </div>
+          <div class="qa" onclick="goScreen('upload')">
+            <div class="qa-ico qi2">⬆️</div><span class="qa-txt">Not Yükle</span>
+          </div>
+          <div class="qa" onclick="goScreen('orders')">
+            <div class="qa-ico qi3">📦</div><span class="qa-txt">Siparişler</span>
+          </div>
+          <div class="qa" onclick="goScreen('profile')">
+            <div class="qa-ico qi4">💰</div><span class="qa-txt">Cüzdan</span>
+          </div>
+        </div>
+
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-ico ms1">💰</div>
+            <div><div class="mini-stat-val">₺245</div><div class="mini-stat-lbl">Cüzdan</div></div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-ico ms2">⭐</div>
+            <div><div class="mini-stat-val">4.9</div><div class="mini-stat-lbl">Satıcı Puanı</div></div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-ico ms3">📤</div>
+            <div><div class="mini-stat-val">8 Not</div><div class="mini-stat-lbl">Yüklediğin</div></div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-ico ms4">🛍️</div>
+            <div><div class="mini-stat-val">14 Not</div><div class="mini-stat-lbl">Satın Aldığın</div></div>
+          </div>
+        </div>
+
+        <div class="s-hd">
+          <h3>🔥 Öne Çıkanlar</h3>
+          <button class="btn btn-gst btn-xs" onclick="goScreen('explore')">Tümü</button>
+        </div>
+        <div class="h-scroll" id="home-h"></div>
+
+        <div class="s-hd"><h3>🎯 Senin İçin</h3></div>
+        <div id="home-v"></div>
+        <div style="height:16px"></div>
+      </div>
+    </div>
+
+    <!-- EXPLORE -->
+    <div class="screen" id="sc-explore">
+      <div class="ex-search">
+        <span class="ex-search-icon">🔍</span>
+        <input id="ex-q" placeholder="Not, ders veya yazar ara…" oninput="filterEx()">
+      </div>
+      <div class="cat-row">
+        <button class="cat-pill on" onclick="setCat(this,'all')">Tümü</button>
+        <button class="cat-pill" onclick="setCat(this,'math')">📐 Matematik</button>
+        <button class="cat-pill" onclick="setCat(this,'cs')">💻 Bilgisayar</button>
+        <button class="cat-pill" onclick="setCat(this,'engineering')">⚙️ Mühendislik</button>
+        <button class="cat-pill" onclick="setCat(this,'business')">📊 İşletme</button>
+        <button class="cat-pill" onclick="setCat(this,'medicine')">🩺 Tıp</button>
+        <button class="cat-pill" onclick="setCat(this,'law')">⚖️ Hukuk</button>
+      </div>
+      <div class="scroll" id="ex-list"></div>
+    </div>
+
+    <!-- CART -->
+    <div class="screen" id="sc-cart">
+      <div class="scroll" id="cart-scroll">
+        <div class="empty" id="cart-empty">
+          <div class="empty-ico">🛒</div>
+          <h3>Sepetiniz Boş</h3>
+          <p>Beğendiğin notları sepete ekle.</p>
+          <button class="btn btn-pr" onclick="goScreen('explore')">Notları Keşfet</button>
+        </div>
+        <div id="cart-filled" style="display:none;flex-direction:column;flex:1">
+          <div id="cart-rows"></div>
+          <div class="order-sum">
+            <h3>Sipariş Özeti</h3>
+            <div class="orow"><span>Ara Toplam</span><span id="c-sub">₺0</span></div>
+            <div class="orow"><span>Komisyon (%10)</span><span id="c-com">₺0</span></div>
+            <div class="orow tot"><span>Toplam</span><span id="c-tot" style="color:var(--pr)">₺0</span></div>
+            <div class="wallet-chip">💰 Cüzdan Bakiyeniz: <strong>₺245.50</strong></div>
+            <button class="btn btn-grn btn-w" id="pay-btn" onclick="checkout()">🔒 Güvenli Öde</button>
+          </div>
+        </div>
+        <div class="success-wrap" id="cart-ok">
+          <div class="success-ico">🎉</div>
+          <h3 style="font-size:22px;font-weight:900;margin-bottom:8px">Satın Alma Başarılı!</h3>
+          <p style="color:var(--txt2);margin-bottom:22px">Notlarınız hesabınıza eklendi.</p>
+          <button class="btn btn-pr" onclick="goScreen('orders')">Siparişlerimi Gör</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="screen" id="sc-orders">
+      <div class="scroll">
+        <div class="seg">
+          <button class="seg-btn on" onclick="segSwitch(this,'ob')">Aldıklarım</button>
+          <button class="seg-btn"    onclick="segSwitch(this,'os')">Sattıklarım</button>
+        </div>
+        <div id="ob"></div>
+        <div id="os" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="screen" id="sc-upload">
+      <div class="scroll">
+        <div class="drop-zone" id="dz"
+          ondragover="event.preventDefault();this.classList.add('over')"
+          ondragleave="this.classList.remove('over')"
+          ondrop="dropFile(event)"
+          onclick="document.getElementById('fi').click()">
+          <div class="drop-ico">📄</div>
+          <h3>Dosyayı Buraya Sürükle</h3>
+          <p>PDF, JPEG, PNG — veya tıkla</p>
+          <div class="drop-file" id="dz-name"></div>
+          <input type="file" id="fi" style="display:none" accept=".pdf,.jpg,.jpeg,.png" onchange="pickFile(this)">
+        </div>
+        <div class="upload-form">
+          <div class="field"><label>Not Başlığı</label><input id="u-title" placeholder="Örn: Kalkülüs I Final Notu"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Ders Kodu</label><input id="u-code" placeholder="MAT101"></div>
+            <div class="field"><label>Fiyat (₺)</label><input id="u-price" type="number" placeholder="0=Ücretsiz"></div>
+          </div>
+          <div class="field">
+            <label>Kategori</label>
+            <select id="u-cat">
+              <option>Matematik</option><option>Bilgisayar Bilimi</option>
+              <option>Mühendislik</option><option>İşletme</option>
+              <option>Tıp</option><option>Hukuk</option><option>Diğer</option>
+            </select>
+          </div>
+          <div class="field"><label>Açıklama</label><textarea id="u-desc" rows="3" placeholder="Bu notlarda neler var?"></textarea></div>
+          <button class="btn btn-pr btn-w" onclick="submitNote()">🚀 Notu Yayınla</button>
+          <div style="height:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="screen" id="sc-profile">
+      <div class="scroll">
+        <div class="profile-top">
+          <div class="profile-av">B</div>
+          <div class="profile-name">Bera Aydın</div>
+          <div class="profile-email">bera@hacettepe.edu.tr</div>
+          <div class="profile-tags">
+            <span class="badge b-pr">✅ Doğrulanmış</span>
+            <span class="badge b-gld">⭐ 4.9 Puan</span>
+            <span class="badge b-grn">8 Not Satıcı</span>
+          </div>
+        </div>
+
+        <div class="wallet-m">
+          <div class="wallet-lbl">Cüzdan Bakiyesi</div>
+          <div class="wallet-amount">₺245.50</div>
+          <div class="wallet-btns">
+            <button class="btn btn-pr btn-sm" onclick="toast('i','Bakiye yükleme yakında! 🚀')">💳 Yükle</button>
+            <button class="btn btn-gst btn-sm" onclick="toast('i','Para çekme başlatıldı.')">🏦 Çek</button>
+          </div>
+        </div>
+
+        <div class="s-hd" style="margin-top:8px"><h3>Son İşlemler</h3></div>
+        <div id="tx-list"></div>
+
+        <div style="margin-top:12px">
+          <div class="menu-item" onclick="goScreen('orders')">
+            <div class="menu-ico" style="background:rgba(124,114,255,.2)">📦</div>
+            <div class="menu-info"><div class="menu-title">Siparişlerim</div><div class="menu-sub">Aldıklarım ve sattıklarım</div></div>
+            <span class="menu-arr">›</span>
+          </div>
+          <div class="menu-item" onclick="goScreen('upload')">
+            <div class="menu-ico" style="background:rgba(5,211,148,.15)">⬆️</div>
+            <div class="menu-info"><div class="menu-title">Not Yükle</div><div class="menu-sub">Kendi notlarını sat</div></div>
+            <span class="menu-arr">›</span>
+          </div>
+          <div class="menu-item" onclick="toast('i','Ayarlar yakında!')">
+            <div class="menu-ico" style="background:rgba(255,255,255,.07)">⚙️</div>
+            <div class="menu-info"><div class="menu-title">Ayarlar</div><div class="menu-sub">Hesap ve bildirim ayarları</div></div>
+            <span class="menu-arr">›</span>
+          </div>
+          <div class="menu-item" onclick="doLogout()">
+            <div class="menu-ico" style="background:rgba(255,92,122,.15)">🚪</div>
+            <div class="menu-info"><div class="menu-title" style="color:var(--red)">Çıkış Yap</div><div class="menu-sub">Güvenli çıkış</div></div>
+            <span class="menu-arr">›</span>
+          </div>
+        </div>
+        <div style="height:16px"></div>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <!-- Bottom Nav -->
+  <nav class="bnav">
+    <div class="bnav-item on" id="bn-home" onclick="goScreen('home')">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-lbl">Ana Sayfa</span>
+      <span class="bnav-dot"></span>
+    </div>
+    <div class="bnav-item" id="bn-explore" onclick="goScreen('explore')">
+      <span class="bnav-icon">🔍</span>
+      <span class="bnav-lbl">Keşfet</span>
+      <span class="bnav-dot"></span>
+    </div>
+    <div class="bnav-item" id="bn-orders" onclick="goScreen('orders')">
+      <span class="bnav-icon">📦</span>
+      <span class="bnav-lbl">Siparişler</span>
+      <span class="bnav-dot"></span>
+    </div>
+    <div class="bnav-item" id="bn-profile" onclick="goScreen('profile')">
+      <span class="bnav-icon">👤</span>
+      <span class="bnav-lbl">Profil</span>
+      <span class="bnav-dot"></span>
+    </div>
+  </nav>
+</div>
+
+<!-- NOTE DETAIL SHEET -->
+<div class="sheet-bg" id="sheet-bg">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner" id="sheet-inner"></div>
+  </div>
+</div>
+
+<script>
+/* ── DATA ─────────────────────────────────────────────── */
+const NOTES=[
+ {id:1, title:'Kalkülüs I — Tam Ders Notu',      course:'MAT101',cat:'math',       seller:'Ahmet Y.', si:'A',price:45, rating:4.9,rv:28,pages:124,thumb:'📐',color:'linear-gradient(135deg,#1e1060,#4f46e5)',desc:'Limit, türev, integral konularını kapsamlı şekilde ele alan notlar. Sınavda çıkan sorularla desteklenmiş.',tags:['Türev','İntegral','Limit'],dl:312},
+ {id:2, title:'Veri Yapıları ve Algoritmalar',    course:'BIL201',cat:'cs',         seller:'Selin K.', si:'S',price:60, rating:4.8,rv:41,pages:96, thumb:'💻',color:'linear-gradient(135deg,#0d2b45,#064789)',desc:'Sorting, graph, tree algoritmalarını Python ile anlatan detaylı notlar.',tags:['Sorting','Graph','Tree'],dl:487},
+ {id:3, title:'Organik Kimya Ders Özeti',         course:'KIM301',cat:'math',       seller:'Melis A.', si:'M',price:35, rating:4.7,rv:19,pages:68, thumb:'⚗️',color:'linear-gradient(135deg,#1a1a2e,#16213e)',desc:'Fonksiyonel gruplar, reaksiyon mekanizmaları. Final odaklı özet.',tags:['Karbon','Reaksiyon'],dl:201},
+ {id:4, title:'Muhasebe Temelleri',               course:'ISL102',cat:'business',   seller:'Can T.',   si:'C',price:0,  rating:4.6,rv:34,pages:55, thumb:'📊',color:'linear-gradient(135deg,#0a2413,#155724)',desc:'Bilanço, gelir tablosu ve maliyet muhasebesi. Ücretsiz paylaşım!',tags:['Bilanço','Muhasebe'],dl:789},
+ {id:5, title:'Diferansiyel Denklemler',          course:'MAT202',cat:'math',       seller:'Emre S.',  si:'E',price:50, rating:5.0,rv:12,pages:82, thumb:'🔢',color:'linear-gradient(135deg,#1e0a30,#7b2d8b)',desc:'ODE ve PDE çözüm teknikleri. El yazısı + LaTeX karışık format.',tags:['ODE','PDE','Laplace'],dl:156},
+ {id:6, title:'İşletme Hukuku Kılavuzu',         course:'HUK201',cat:'law',        seller:'Zeynep B.',si:'Z',price:75, rating:4.5,rv:22,pages:148,thumb:'⚖️',color:'linear-gradient(135deg,#1a0a00,#7a3b00)',desc:'Şirketler ve ticaret hukuku özetleri. Dava örnekleriyle desteklenmiş.',tags:['Şirket','Sözleşme'],dl:134},
+ {id:7, title:'Yapay Zeka ve Makine Öğrenmesi',  course:'BIL401',cat:'cs',         seller:'Berk O.',  si:'B',price:90, rating:4.9,rv:38,pages:210,thumb:'🤖',color:'linear-gradient(135deg,#001a1a,#006666)',desc:'Supervised/Unsupervised learning, neural networks, NLP. Python örnekleri dahil.',tags:['ML','Neural Net','NLP'],dl:623},
+ {id:8, title:'Termodinamik Ders Notları',        course:'MUH301',cat:'engineering',seller:'Ayşe D.', si:'A',price:40, rating:4.7,rv:17,pages:88, thumb:'🌡️',color:'linear-gradient(135deg,#1a0000,#660000)',desc:'Isı, iş, entropi, hal denklemleri. Mühendislik sınavları için optimize edilmiş.',tags:['Entropi','Carnot'],dl:245},
+ {id:9, title:'Anatomi — 1. Sınıf Notları',      course:'TIP101',cat:'medicine',   seller:'Nur Ç.',  si:'N',price:55, rating:4.8,rv:29,pages:176,thumb:'🫀',color:'linear-gradient(135deg,#0d001a,#4a0072)',desc:'Kas, iskelet, sinir sistemi anatomisi. Renkli şemalar ile desteklenmiş.',tags:['Anatomi','İskelet'],dl:419},
+ {id:10,title:'Lineer Cebir Final Paketi',        course:'MAT301',cat:'math',       seller:'Furkan A.',si:'F',price:30, rating:4.6,rv:15,pages:60, thumb:'📏',color:'linear-gradient(135deg,#001020,#003060)',desc:'Matrisler, determinantlar, eigenvalue/vector. Final sorularına göre hazırlı.',tags:['Matris','Determinant'],dl:178},
+];
+const TX=[
+ {t:'in', lbl:'Kalkülüs I satış geliri',   amt:'+₺40.50',date:'16 Tem',ico:'📤'},
+ {t:'in', lbl:'Veri Yapıları satış geliri', amt:'+₺54.00',date:'14 Tem',ico:'📤'},
+ {t:'out',lbl:'Termodinamik satın alındı',  amt:'-₺40.00',date:'12 Tem',ico:'🛍️'},
+ {t:'in', lbl:'Bakiye yükleme',             amt:'+₺100',  date:'10 Tem',ico:'💳'},
+];
+let cart=[];
+let curCat='all';
+let curScreen='home';
+const BOUGHT=[{...NOTES[6],date:'12 Tem',status:'Tamamlandı'},{...NOTES[7],date:'8 Tem',status:'Tamamlandı'}];
+
+/* ── AUTH ─────────────────────────────────────────────── */
+function authSwitch(t){
+  ['login','reg'].forEach(x=>{
+    document.getElementById('at-'+x).classList.toggle('on',x===t);
+    document.getElementById('af-'+x).classList.toggle('on',x===t);
+  });
+}
+function doLogin(){
+  toast('s','Giriş başarılı! Hoş geldiniz 🎓');
+  setTimeout(()=>{
+    document.getElementById('auth').style.display='none';
+    document.getElementById('app').classList.add('show');
+    initApp();
+  },650);
+}
+function doLogout(){
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('auth').style.display='';
+  cart=[];updateBadge();
+  toast('i','Güvenli çıkış yapıldı.');
+}
+
+/* ── NAVIGATION ───────────────────────────────────────── */
+const TAB_SCREENS=['home','explore','orders','profile'];
+
+function goScreen(s){
+  // hide all
+  document.querySelectorAll('.screen').forEach(el=>{
+    el.classList.remove('active');
+  });
+  // show target
+  const el=document.getElementById('sc-'+s);
+  if(el){ el.classList.add('active'); }
+
+  // bottom nav highlights — only for tab screens
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('on'));
+  if(TAB_SCREENS.includes(s)){
+    const bn=document.getElementById('bn-'+s);
+    if(bn) bn.classList.add('on');
+  }
+
+  // scroll target to top
+  const sc=el&&el.querySelector('.scroll');
+  if(sc) sc.scrollTop=0;
+
+  curScreen=s;
+
+  if(s==='home')    renderHome();
+  if(s==='explore') renderExplore();
+  if(s==='cart')    renderCart();
+  if(s==='orders')  renderOrders();
+  if(s==='profile') renderProfile();
+}
+
+function initApp(){ goScreen('home'); }
+
+/* ── RENDER HOME ──────────────────────────────────────── */
+function renderHome(){
+  document.getElementById('home-h').innerHTML=NOTES.slice(0,5).map(n=>`
+    <div class="h-card" onclick="openSheet(${n.id})">
+      <div class="h-card-thumb" style="background:${n.color}">${n.thumb}</div>
+      <div class="h-card-body">
+        <div class="h-card-title">${n.title}</div>
+        <div class="${n.price===0?'h-card-price free':'h-card-price'}">${n.price===0?'✅ Ücretsiz':'₺'+n.price}</div>
+        <div class="h-card-rating">⭐ ${n.rating} (${n.rv})</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('home-v').innerHTML=NOTES.slice(5,10).map(n=>vRow(n)).join('');
+}
+
+/* ── RENDER EXPLORE ───────────────────────────────────── */
+function renderExplore(){ filterEx(); }
+function filterEx(){
+  const q=(document.getElementById('ex-q')||{value:''}).value.toLowerCase();
+  const list=NOTES.filter(n=>{
+    if(curCat!=='all'&&n.cat!==curCat) return false;
+    if(q&&!n.title.toLowerCase().includes(q)&&!n.course.toLowerCase().includes(q)&&!n.seller.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const el=document.getElementById('ex-list');
+  if(el) el.innerHTML=list.length?list.map(n=>vRow(n)).join('')
+    :`<div class="empty"><div class="empty-ico">🔍</div><h3>Sonuç yok</h3><p>Farklı bir şey dene.</p></div>`;
+}
+function setCat(btn,cat){
+  document.querySelectorAll('.cat-pill').forEach(c=>c.classList.remove('on'));
+  btn.classList.add('on'); curCat=cat; filterEx();
+}
+
+/* ── VERTICAL ROW ─────────────────────────────────────── */
+function vRow(n){
+  const inCart=cart.some(c=>c.id===n.id);
+  return `
+  <div class="v-row" onclick="openSheet(${n.id})">
+    <div class="v-row-thumb" style="background:${n.color}">${n.thumb}</div>
+    <div class="v-row-info">
+      <div class="v-row-title">${n.title}</div>
+      <div class="v-row-tags">
+        <span class="badge b-neu">${n.course}</span>
+        <span class="badge b-pr">${catL(n.cat)}</span>
+      </div>
+      <div class="v-row-sub">${n.seller} · ${n.pages} sayfa</div>
+    </div>
+    <div class="v-row-right">
+      <div class="${n.price===0?'v-row-price free':'v-row-price'}">${n.price===0?'Ücretsiz':'₺'+n.price}</div>
+      <div class="v-row-star">⭐ ${n.rating}</div>
+      <button class="add-btn ${inCart?'in':'out'}" onclick="event.stopPropagation();toggleCart(${n.id})">
+        ${inCart?'✓ Eklendi':'+ Ekle'}
+      </button>
+    </div>
+  </div>`;
+}
+function catL(c){return{math:'Mat',cs:'Bilgisayar',engineering:'Müh',business:'İşletme',medicine:'Tıp',law:'Hukuk'}[c]||c;}
+
+/* ── CART ─────────────────────────────────────────────── */
+function toggleCart(id){
+  const n=NOTES.find(x=>x.id===id);
+  const i=cart.findIndex(c=>c.id===id);
+  if(i>=0){cart.splice(i,1);toast('i','Sepetten çıkarıldı.');}
+  else{cart.push(n);toast('s','Sepete eklendi! 🛒');}
+  updateBadge();
+  if(curScreen==='home') renderHome();
+  if(curScreen==='explore') filterEx();
+}
+function updateBadge(){
+  const b=document.getElementById('cart-badge');
+  b.textContent=cart.length;
+  b.classList.toggle('on',cart.length>0);
+}
+function renderCart(){
+  const empty=cart.length===0;
+  document.getElementById('cart-empty').style.display=empty?'flex':'none';
+  document.getElementById('cart-filled').style.display=empty?'none':'flex';
+  document.getElementById('cart-ok').classList.remove('on');
+  if(empty) return;
+
+  document.getElementById('cart-rows').innerHTML=cart.map(n=>`
+    <div class="cart-row">
+      <div class="cart-thumb" style="background:${n.color}">${n.thumb}</div>
+      <div class="cart-info">
+        <div class="cart-title">${n.title}</div>
+        <div class="cart-sub">${n.course} · ${n.seller}</div>
+      </div>
+      <div>
+        <div class="cart-price-s">${n.price===0?'Ücretsiz':'₺'+n.price}</div>
+        <div class="cart-del" onclick="toggleCart(${n.id});renderCart()">🗑</div>
+      </div>
+    </div>`).join('');
+
+  const sub=cart.reduce((s,n)=>s+n.price,0);
+  const com=+(sub*.1).toFixed(2);
+  document.getElementById('c-sub').textContent='₺'+sub.toFixed(2);
+  document.getElementById('c-com').textContent='₺'+com;
+  document.getElementById('c-tot').textContent='₺'+(sub+com).toFixed(2);
+}
+function checkout(){
+  cart.forEach(n=>BOUGHT.unshift({...n,date:'16 Tem',status:'Tamamlandı'}));
+  cart=[];updateBadge();
+  document.getElementById('cart-rows').innerHTML='';
+  document.getElementById('cart-filled').style.display='none';
+  document.getElementById('cart-ok').classList.add('on');
+  toast('s','🎉 Satın alma tamamlandı!');
+}
+
+/* ── ORDERS ───────────────────────────────────────────── */
+function renderOrders(){
+  document.getElementById('ob').innerHTML=BOUGHT.map(n=>`
+    <div class="order-row-m">
+      <div class="v-row-thumb" style="background:${n.color};width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${n.thumb}</div>
+      <div class="v-row-info">
+        <div class="v-row-title">${n.title}</div>
+        <div class="v-row-tags"><span class="badge b-grn">${n.status}</span></div>
+        <div class="v-row-sub">${n.date} · ${n.seller}</div>
+      </div>
+      <button class="btn btn-pr btn-xs" onclick="toast('s','Not indirildi! 📥')">📥</button>
+    </div>`).join('')||`<div class="empty"><div class="empty-ico">📦</div><h3>Henüz alım yok</h3><p>Notları keşfet ve satın al.</p><button class="btn btn-pr" onclick="goScreen('explore')">Keşfet</button></div>`;
+
+  document.getElementById('os').innerHTML=NOTES.slice(0,3).map(n=>`
+    <div class="order-row-m">
+      <div class="v-row-thumb" style="background:${n.color};width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${n.thumb}</div>
+      <div class="v-row-info">
+        <div class="v-row-title">${n.title}</div>
+        <div class="v-row-tags"><span class="badge b-pr">${n.dl} satış</span></div>
+        <div class="v-row-sub">${n.course}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:15px;font-weight:900;color:var(--green)">₺${(n.price*n.dl*.9).toFixed(0)}</div>
+        <div style="font-size:10px;color:var(--txt3)">kazanç</div>
+      </div>
+    </div>`).join('');
+}
+function segSwitch(btn,id){
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('ob').style.display=id==='ob'?'block':'none';
+  document.getElementById('os').style.display=id==='os'?'block':'none';
+}
+
+/* ── UPLOAD ───────────────────────────────────────────── */
+function dropFile(e){
+  e.preventDefault();document.getElementById('dz').classList.remove('over');
+  const f=e.dataTransfer.files[0];if(f)document.getElementById('dz-name').textContent='✅ '+f.name;
+}
+function pickFile(i){if(i.files[0])document.getElementById('dz-name').textContent='✅ '+i.files[0].name;}
+function submitNote(){
+  const t=document.getElementById('u-title').value;
+  if(!t){toast('e','Lütfen not başlığı girin!');return;}
+  toast('s',`"${t}" yayınlandı! 🎉`);
+  ['u-title','u-code','u-price','u-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('dz-name').textContent='';
+  setTimeout(()=>goScreen('home'),1100);
+}
+
+/* ── PROFILE ──────────────────────────────────────────── */
+function renderProfile(){
+  document.getElementById('tx-list').innerHTML=TX.map(tx=>`
+    <div class="tx-row">
+      <div class="tx-ico">${tx.ico}</div>
+      <div style="flex:1"><div class="tx-lbl">${tx.lbl}</div><div class="tx-date">${tx.date}</div></div>
+      <span class="tx-amount ${tx.t==='in'?'tx-p':'tx-n'}">${tx.amt}</span>
+    </div>`).join('');
+}
+
+/* ── DETAIL SHEET ─────────────────────────────────────── */
+function openSheet(id){
+  const n=NOTES.find(x=>x.id===id);
+  const inCart=cart.some(c=>c.id===id);
+  document.getElementById('sheet-inner').innerHTML=`
+    <div style="height:140px;background:${n.color};border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:18px">${n.thumb}</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+      <span class="badge b-neu">${n.course}</span>
+      <span class="badge b-pr">${catL(n.cat)}</span>
+      <span class="badge b-gld">⭐ ${n.rating} (${n.rv})</span>
+      <span class="badge b-neu">${n.dl} indirme</span>
+    </div>
+    <h2 style="font-size:19px;font-weight:900;line-height:1.3;margin-bottom:10px">${n.title}</h2>
+    <p style="font-size:13px;color:var(--txt2);line-height:1.65;margin-bottom:14px">${n.desc}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-size:9px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Satıcı</div>
+        <div style="font-size:14px;font-weight:700">${n.seller}</div>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-size:9px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Sayfa</div>
+        <div style="font-size:14px;font-weight:700">${n.pages} sayfa</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px">
+      <div style="flex:1">
+        <div style="font-size:9px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.8px">Fiyat</div>
+        <div style="font-size:30px;font-weight:900;color:${n.price===0?'var(--green)':'var(--pr)'}">${n.price===0?'Ücretsiz':'₺'+n.price}</div>
+      </div>
+      <button class="btn ${inCart?'btn-gst':'btn-pr'}" style="flex:1" onclick="toggleCart(${id});closeSheet()">
+        ${inCart?'✓ Sepetten Çıkar':'🛒 Sepete Ekle'}
+      </button>
+    </div>
+    <div style="font-size:14px;font-weight:800;margin-bottom:12px">💬 Değerlendirmeler</div>
+    ${[{u:'Elif K.',r:5,c:'Harika notlar, çok işime yaradı!'},{u:'Murat S.',r:5,c:'Açıklamalar çok net.'},{u:'Derya A.',r:4,c:'Bazı konular eksik ama genel iyi.'}].map(r=>`
+    <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--pr),var(--red));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0">${r.u[0]}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700">${r.u} ${'⭐'.repeat(r.r)}</div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:2px">${r.c}</div>
+      </div>
+    </div>`).join('')}
+    <div style="height:8px"></div>`;
+  document.getElementById('sheet-bg').classList.add('on');
+}
+function closeSheet(){ document.getElementById('sheet-bg').classList.remove('on'); }
+
+/* ── TOAST ────────────────────────────────────────────── */
+function toast(type,msg){
+  const ic={s:'✅',e:'❌',i:'ℹ️'};
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${ic[type]}</span><span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>{el.classList.add('bye');setTimeout(()=>el.remove(),300);},2600);
+}
+
+/* ── EVENTS ───────────────────────────────────────────── */
+document.getElementById('sheet-bg').addEventListener('click',e=>{
+  if(e.target===e.currentTarget) closeSheet();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
+
+/* ── DRAG TO SCROLL (MOBILE FEEL) ─────────────────────── */
+(function(){
+  let isDown = false, startY = 0, scrollTop = 0, vel = 0, lastY = 0, lastTime = 0, raf;
+  const getArea = (t) => t.closest('.scroll') || t.closest('#auth') || t.closest('.sheet');
+
+  document.addEventListener('mousedown', (e) => {
+    const area = getArea(e.target);
+    if(!area) return;
+    isDown = true;
+    startY = e.pageY;
+    scrollTop = area.scrollTop;
+    lastY = e.pageY;
+    lastTime = Date.now();
+    vel = 0;
+    if(raf) cancelAnimationFrame(raf);
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if(!isDown) return;
+    const area = getArea(e.target);
+    if(!area) return;
+    
+    e.preventDefault(); // Metin seçimini engelle
+    const y = e.pageY;
+    area.scrollTop = scrollTop - (y - startY);
+    
+    const now = Date.now();
+    vel = (y - lastY) / (now - lastTime || 1) * 16;
+    lastY = y;
+    lastTime = now;
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if(!isDown) return;
+    isDown = false;
+    const area = getArea(e.target);
+    if(!area) return;
+    
+    function momentum() {
+      if(Math.abs(vel) < 0.5) return;
+      vel *= 0.92;
+      area.scrollTop -= vel * 1.5;
+      raf = requestAnimationFrame(momentum);
+    }
+    momentum();
+  });
+})();
+</script>
+</body>
+</html>
